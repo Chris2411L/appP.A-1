@@ -12,8 +12,9 @@ namespace appP.A
         {
             InitializeComponent();
             this.Title = categoria.Nombre;
-            // Asegúrate de que AppData.Productos no sea nulo
-            ProductosList.ItemsSource = AppData.Productos.Where(p => p.Categoria == categoria.Nombre).ToList();
+
+            // CORRECCIÓN 2: Asignar directamente los productos de la categoría recibida
+            ProductosList.ItemsSource = categoria.Productos.ToList();
         }
 
         private async void OnAgregarAlCarritoClicked(object sender, EventArgs e)
@@ -23,7 +24,8 @@ namespace appP.A
 
             if (producto != null)
             {
-                AppData.CarritoActual.Agregar(producto);
+                // CORRECCIÓN 1: Usar AgregarProducto() que es el nombre correcto en Carrito.cs
+                AppData.CarritoActual.AgregarProducto(producto);
                 await button.ScaleTo(1.1, 100);
                 await button.ScaleTo(1.0, 100);
             }
