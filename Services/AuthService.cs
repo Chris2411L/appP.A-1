@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using appP.A.Models;
 using Microsoft.Maui.Storage;
 using SQLite;
@@ -15,102 +16,99 @@ namespace appP.A.Services
         private static SQLiteAsyncConnection _db;
         private const string CurrentUserKey = "app_current_user";
 
-        // 1. Inicializa la base de datos y crea la tabla si no existe
         private static async Task InitAsync()
         {
-            if (_db != null)
-                return;
+            if (_db != null) return;
 
-            // Crea un archivo físico llamado NontonioUsers.db3 en el dispositivo
             var databasePath = Path.Combine(FileSystem.AppDataDirectory, "NontonioUsers.db3");
             _db = new SQLiteAsyncConnection(databasePath);
-
-            // Crea la tabla basada en el modelo User
             await _db.CreateTableAsync<User>();
         }
 
-        // 2. Guardar un nuevo usuario en la base de datos
         public static async Task<(bool success, string error)> RegisterAsync(string username, string password)
         {
-            await InitAsync();
-
-            if (string.IsNullOrWhiteSpace(username)) return (false, "Usuario vacío.");
-            if (string.IsNullOrWhiteSpace(password)) return (false, "Contraseña vacía.");
-            username = username.Trim();
-
-            if (string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
-                return (false, "El nombre 'admin' está reservado.");
-
-            // Buscar si el usuario ya existe en SQLite
-            var existingUser = await _db.Table<User>()
-                                        .Where(u => u.Username.ToLower() == username.ToLower())
-                                        .FirstOrDefaultAsync();
-
-            if (existingUser != null)
-                return (false, "El usuario ya existe.");
-
+            // Envolver TODO en un try-catch evita que la app se cierre si algo falla
             try
             {
+                await InitAsync();
+
+                if (string.IsNullOrWhiteSpace(username)) return (false, "Usuario vacío.");
+                if (string.IsNullOrWhiteSpace(password)) return (false, "Contraseña vacía.");
+                username = username.Trim();
+
+                if (string.Equals(username, "admin", StringComparison.OrdinalIgnoreCase))
+                    return (false, "El nombre 'admin' está reservado.");
+
+                // CORRECCIÓN ANTI-CRASH: Evitamos usar .ToLower() directamente en la base de datos.
+                // Obtenemos los usuarios y los comparamos de forma segura en memoria.
+                var todosLosUsuarios = await _db.Table<User>().ToListAsync();
+                var existingUser = todosLosUsuarios.FirstOrDefault(u =>
+                    u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+                if (existingUser != null)
+                    return (false, "El usuario ya existe.");
+
                 var newUser = new User
                 {
                     Username = username,
                     PasswordHash = Hash(password)
                 };
 
-                // Insertar el usuario en la tabla
                 await _db.InsertAsync(newUser);
-
                 Preferences.Set(CurrentUserKey, username);
+
                 return (true, string.Empty);
             }
             catch (Exception ex)
             {
-                return (false, $"Error al guardar usuario: {ex.Message}");
+                // Si ocurre un fallo, la app no se cierra, sino que te avisa en rojo
+                return (false, $"Error interno: {ex.Message}");
             }
         }
 
-        // 3. Consultar la base de datos para iniciar sesión
         public static async Task<bool> LoginAsync(string username, string password)
         {
-            await InitAsync();
-
-            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return false;
-            username = username.Trim();
-
-            // Buscar al usuario en la tabla
-            var user = await _db.Table<User>()
-                                .Where(u => u.Username.ToLower() == username.ToLower())
-                                .FirstOrDefaultAsync();
-
-            if (user != null)
+            try
             {
-                var providedHash = Hash(password);
+                await InitAsync();
 
-                // Si la contraseña coincide, dar acceso
-                if (user.PasswordHash == providedHash)
+                if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password)) return false;
+                username = username.Trim();
+
+                // CORRECCIÓN ANTI-CRASH AQUÍ TAMBIÉN
+                var todosLosUsuarios = await _db.Table<User>().ToListAsync();
+                var user = todosLosUsuarios.FirstOrDefault(u =>
+                    u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+
+                if (user != null)
                 {
-                    Preferences.Set(CurrentUserKey, user.Username);
-                    return true;
+                    var providedHash = Hash(password);
+                    if (user.PasswordHash == providedHash)
+                    {
+                        Preferences.Set(CurrentUserKey, user.Username);
+                        return true;
+                    }
                 }
-            }
 
-            return false;
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        // Nuevo: obtener todos los usuarios
         public static async Task<List<User>> GetAllUsersAsync()
         {
             await InitAsync();
             return await _db.Table<User>().ToListAsync();
         }
 
-        // Nuevo: eliminar usuario por Id
         public static async Task<bool> DeleteUserAsync(int id)
         {
-            await InitAsync();
-
             try
             {
+                await InitAsync();
                 var user = await _db.FindAsync<User>(id);
                 if (user == null) return false;
 
@@ -133,7 +131,6 @@ namespace appP.A.Services
             return Preferences.Get(CurrentUserKey, null);
         }
 
-        // 4. Encriptar contraseñas (Seguridad)
         private static string Hash(string input)
         {
             using var sha = SHA256.Create();
