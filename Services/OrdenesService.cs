@@ -1,9 +1,9 @@
-﻿using SQLite;
+﻿using appP.A.Models;
+using SQLite;
+using System;
 using System.IO;
-using System.Threading.Tasks;
 using System.Collections.Generic;
-using Microsoft.Maui.Storage;
-using appP.A.Models;
+using System.Threading.Tasks;
 
 namespace appP.A.Services
 {
@@ -14,7 +14,8 @@ namespace appP.A.Services
         private static async Task InitAsync()
         {
             if (_db != null) return;
-            var path = Path.Combine(FileSystem.AppDataDirectory, "NontonioOrdenes.db3");
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var path = Path.Combine(appData, "NontonioOrdenes.db3");
             _db = new SQLiteAsyncConnection(path);
             await _db.CreateTableAsync<Orden>();
         }

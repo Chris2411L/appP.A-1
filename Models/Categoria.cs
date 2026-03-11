@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace appP.A.Models
+﻿namespace appP.A.Models
 {
     public class Categoria
     {

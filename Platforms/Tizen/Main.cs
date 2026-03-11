@@ -1,7 +1,3 @@
-using System;
-using Microsoft.Maui;
-using Microsoft.Maui.Hosting;
-
 namespace appP.A
 {
     internal class Program : MauiApplication

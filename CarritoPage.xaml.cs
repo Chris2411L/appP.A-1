@@ -1,9 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using appP.A.Models;
 using System.Collections.Specialized;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Controls;
-using appP.A.Models;
 
 namespace appP.A
 {

@@ -1,13 +1,14 @@
-﻿using System;
-using System.IO;
+﻿using appP.A.Models;
+using SQLite;
+using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using appP.A.Models;
-using Microsoft.Maui.Storage;
-using SQLite;
+using System.Threading.Tasks;
+// Avoid direct dependency on Microsoft.Maui.Storage to allow building in environments
+// where MAUI workloads are not installed. Use LocalApplicationData instead.
 
 namespace appP.A.Services
 {
@@ -20,7 +21,8 @@ namespace appP.A.Services
         {
             if (_db != null) return;
 
-            var databasePath = Path.Combine(FileSystem.AppDataDirectory, "NontonioUsers.db3");
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            var databasePath = Path.Combine(appData, "NontonioUsers.db3");
             _db = new SQLiteAsyncConnection(databasePath);
             await _db.CreateTableAsync<User>();
         }

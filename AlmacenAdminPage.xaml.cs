@@ -1,9 +1,6 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Linq;
-using Microsoft.Maui.Controls;
 using appP.A.Models;
 using appP.A.Services;
+using System.Collections.ObjectModel;
 
 namespace appP.A
 {

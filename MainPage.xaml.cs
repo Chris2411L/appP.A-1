@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.Maui.Controls;
-using appP.A.Models;
+﻿using appP.A.Models;
 using appP.A.Services;
 
 namespace appP.A

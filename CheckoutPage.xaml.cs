@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Globalization;
-using System.Net.Http;
-using System.Text.Json;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Storage;
 using appP.A.Models;
 using appP.A.Services;
+using System.Globalization;
+using System.Text.Json;
 
 namespace appP.A
 {

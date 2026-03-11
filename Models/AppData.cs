@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace appP.A.Models
+﻿namespace appP.A.Models
 {
     public static class AppData
     {
